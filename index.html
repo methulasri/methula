@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Puzzle Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f5f5f5;
+        }
+
+        .game-container {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-template-rows: repeat(3, 100px);
+            gap: 2px;
+            border: 2px solid #333;
+            width: 306px;
+            height: 306px;
+            background-color: #fff;
+        }
+
+        .game-piece {
+            width: 100px;
+            height: 100px;
+            background-size: 300px 300px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 1px solid #ddd;
+        }
+
+        .game-piece img {
+            width: 100%;
+            height: 100%;
+        }
+
+        #shuffle-btn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container" id="game-container"></div>
+    <button id="shuffle-btn">Shuffle Puzzle</button>
+
+    <script>
+        const gameContainer = document.getElementById("game-container");
+        const shuffleBtn = document.getElementById("shuffle-btn");
+
+        const pieces = [];
+        const rows = 3;
+        const cols = 3;
+        const imagePath = "https://via.placeholder.com/300";  // Placeholder image for the puzzle
+
+        // Create the puzzle pieces
+        for (let row = 0; row < rows; row++) {
+            for (let col = 0; col < cols; col++) {
+                const piece = document.createElement("div");
+                piece.classList.add("game-piece");
+                piece.setAttribute("draggable", "true");
+                piece.setAttribute("data-row", row);
+                piece.setAttribute("data-col", col);
+                piece.style.backgroundPosition = `${-col * 100}px ${-row * 100}px`;
+
+                const img = document.createElement("img");
+                img.src = imagePath;
+                piece.appendChild(img);
+                pieces.push(piece);
+                gameContainer.appendChild(piece);
+
+                // Add drag and drop event listeners
+                piece.addEventListener("dragstart", handleDragStart);
+                piece.addEventListener("dragover", handleDragOver);
+                piece.addEventListener("drop", handleDrop);
+                piece.addEventListener("dragend", handleDragEnd);
+            }
+        }
+
+        let draggedPiece = null;
+
+        function handleDragStart(e) {
+            draggedPiece = e.target;
+            setTimeout(() => {
+                e.target.style.opacity = 0.5;
+            }, 0);
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            if (draggedPiece !== e.target) {
+                const targetRow = e.target.getAttribute("data-row");
+                const targetCol = e.target.getAttribute("data-col");
+                const draggedRow = draggedPiece.getAttribute("data-row");
+                const draggedCol = draggedPiece.getAttribute("data-col");
+
+                // Swap positions
+                draggedPiece.setAttribute("data-row", targetRow);
+                draggedPiece.setAttribute("data-col", targetCol);
+                e.target.setAttribute("data-row", draggedRow);
+                e.target.setAttribute("data-col", draggedCol);
+
+                const tempBgPosition = draggedPiece.style.backgroundPosition;
+                draggedPiece.style.backgroundPosition = e.target.style.backgroundPosition;
+                e.target.style.backgroundPosition = tempBgPosition;
+            }
+        }
+
+        function handleDragEnd(e) {
+            e.target.style.opacity = 1;
+            checkWin();
+        }
+
+        // Shuffle the puzzle pieces
+        shuffleBtn.addEventListener("click", shufflePieces);
+
+        function shufflePieces() {
+            const shuffledPieces = pieces.sort(() => Math.random() - 0.5);
+            shuffledPieces.forEach((piece, index) => {
+                gameContainer.appendChild(piece);
+                piece.setAttribute("data-row", Math.floor(index / cols));
+                piece.setAttribute("data-col", index % cols);
+                piece.style.backgroundPosition = `${-(index % cols) * 100}px ${-Math.floor(index / cols) * 100}px`;
+            });
+        }
+
+        // Check if the puzzle is solved
+        function checkWin() {
+            let win = true;
+            pieces.forEach(piece => {
+                const correctRow = piece.getAttribute("data-row");
+                const correctCol = piece.getAttribute("data-col");
+                const targetRow = Math.floor(piece.offsetTop / 100);
+                const targetCol = Math.floor(piece.offsetLeft / 100);
+
+                if (correctRow != targetRow || correctCol != targetCol) {
+                    win = false;
+                }
+            });
+
+            if (win) {
+                alert("Congratulations! You solved the puzzle!");
+            }
+        }
+    </script>
+
+</body>
+</html>
